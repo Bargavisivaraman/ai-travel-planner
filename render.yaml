@@ -1,0 +1,29 @@
+# Render Blueprint — deploys the app + a free PostgreSQL database.
+# Usage: push to GitHub, then in Render: New > Blueprint > select this repo.
+databases:
+  - name: travelplanner-db
+    databaseName: travelplanner
+    plan: free
+
+services:
+  - type: web
+    name: ai-travel-planner
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: travelplanner-db
+          property: connectionString
+      - key: AUTH_SECRET
+        generateValue: true
+      - key: NEXTAUTH_URL
+        sync: false # set to your Render URL, e.g. https://ai-travel-planner.onrender.com
+      - key: OPENAI_API_KEY
+        sync: false # optional — add your key to enable live AI generation
+      - key: OPENAI_MODEL
+        value: gpt-4o-mini
+      - key: SEED_ON_START
+        value: "true"

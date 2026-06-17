@@ -1,0 +1,196 @@
+// AI Travel Planner — Prisma schema
+// Database: PostgreSQL
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum TripStatus {
+  PLANNING
+  BOOKED
+  COMPLETED
+}
+
+enum ActivityType {
+  SIGHTSEEING
+  FOOD
+  TRANSPORT
+  HOTEL
+  FLIGHT
+  RELAX
+  OTHER
+}
+
+enum NoteType {
+  HOTEL
+  FLIGHT
+  ACTIVITY
+  LOCATION
+  GENERAL
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String?
+  email     String   @unique
+  password  String
+  image     String?
+  role      Role     @default(USER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  trips      Trip[]
+  favorites  FavoriteDestination[]
+}
+
+model Trip {
+  id          String     @id @default(cuid())
+  userId      String
+  title       String
+  description String?
+  coverImage  String?
+  startDate   DateTime?
+  endDate     DateTime?
+  budget      Float      @default(0)
+  currency    String     @default("USD")
+  status      TripStatus @default(PLANNING)
+  travelers   Int        @default(1)
+  isPublic    Boolean    @default(false)
+  shareSlug   String     @unique @default(cuid())
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cities    City[]
+  days      ItineraryDay[]
+  expenses  Expense[]
+  packing   PackingItem[]
+  checklist ChecklistItem[]
+  notes     Note[]
+
+  @@index([userId])
+}
+
+model City {
+  id            String    @id @default(cuid())
+  tripId        String
+  name          String
+  country       String?
+  arrivalDate   DateTime?
+  departureDate DateTime?
+  lat           Float?
+  lng           Float?
+  order         Int       @default(0)
+  notes         String?
+
+  trip Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+
+  @@index([tripId])
+}
+
+model ItineraryDay {
+  id        String   @id @default(cuid())
+  tripId    String
+  dayNumber Int
+  date      DateTime?
+  city      String?
+  summary   String?
+
+  trip       Trip       @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  activities Activity[]
+
+  @@index([tripId])
+}
+
+model Activity {
+  id          String       @id @default(cuid())
+  dayId       String
+  time        String?
+  title       String
+  description String?
+  location    String?
+  type        ActivityType @default(SIGHTSEEING)
+  cost        Float        @default(0)
+  order       Int          @default(0)
+
+  day ItineraryDay @relation(fields: [dayId], references: [id], onDelete: Cascade)
+
+  @@index([dayId])
+}
+
+model Expense {
+  id          String   @id @default(cuid())
+  tripId      String
+  category    String
+  description String
+  amount      Float
+  date        DateTime @default(now())
+
+  trip Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+
+  @@index([tripId])
+}
+
+model PackingItem {
+  id       String  @id @default(cuid())
+  tripId   String
+  name     String
+  category String  @default("General")
+  quantity Int     @default(1)
+  packed   Boolean @default(false)
+
+  trip Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+
+  @@index([tripId])
+}
+
+model ChecklistItem {
+  id      String    @id @default(cuid())
+  tripId  String
+  text    String
+  done    Boolean   @default(false)
+  dueDate DateTime?
+
+  trip Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+
+  @@index([tripId])
+}
+
+model Note {
+  id       String   @id @default(cuid())
+  tripId   String
+  type     NoteType @default(GENERAL)
+  title    String
+  content  String?
+  location String?
+  createdAt DateTime @default(now())
+
+  trip Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+
+  @@index([tripId])
+}
+
+model FavoriteDestination {
+  id        String   @id @default(cuid())
+  userId    String
+  name      String
+  country   String?
+  notes     String?
+  lat       Float?
+  lng       Float?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
