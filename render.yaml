@@ -1,10 +1,11 @@
-# Render Blueprint — deploys the app + a free PostgreSQL database.
-# Usage: push to GitHub, then in Render: New > Blueprint > select this repo.
-databases:
-  - name: travelplanner-db
-    databaseName: travelplanner
-    plan: free
-
+# Render Blueprint — deploys the web service.
+#
+# The database is provided externally (e.g. a free Neon PostgreSQL at neon.tech),
+# because Render allows only one free-tier database per account. Set DATABASE_URL
+# to your external connection string after the first sync.
+#
+# Usage: push to GitHub, then in Render: New > Blueprint > select this repo,
+# then set DATABASE_URL (and NEXTAUTH_URL) in the service environment.
 services:
   - type: web
     name: ai-travel-planner
@@ -14,9 +15,7 @@ services:
     healthCheckPath: /
     envVars:
       - key: DATABASE_URL
-        fromDatabase:
-          name: travelplanner-db
-          property: connectionString
+        sync: false # paste your Neon (or other) PostgreSQL connection string
       - key: AUTH_SECRET
         generateValue: true
       - key: NEXTAUTH_URL
