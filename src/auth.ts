@@ -5,6 +5,8 @@ import { prisma } from "@/lib/prisma";
 import { loginSchema } from "@/lib/validations";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
+  // Trust the deployment host (required behind proxies such as Render).
+  trustHost: true,
   session: { strategy: "jwt" },
   pages: {
     signIn: "/login",
