@@ -14,10 +14,17 @@ else
   "$PRISMA" db push --skip-generate
 fi
 
-# Optional: seed when SEED_ON_START=true
+# Optional: seed when SEED_ON_START=true, but only if the database is empty
+# (no users yet). This makes a fresh deploy self-seed without wiping data on
+# later restarts.
 if [ "$SEED_ON_START" = "true" ]; then
-  echo "Seeding database…"
-  "$TSX" prisma/seed.ts || echo "Seed skipped/failed (continuing)"
+  USER_COUNT=$(node -e "const{PrismaClient}=require('@prisma/client');const p=new PrismaClient();p.user.count().then(c=>{console.log(c);return p.\$disconnect()}).catch(()=>{console.log(-1)})" 2>/dev/null || echo "-1")
+  if [ "$USER_COUNT" = "0" ]; then
+    echo "Empty database — seeding demo data…"
+    "$TSX" prisma/seed.ts || echo "Seed failed (continuing)"
+  else
+    echo "Database already has data (users=$USER_COUNT) — skipping seed."
+  fi
 fi
 
 exec "$@"

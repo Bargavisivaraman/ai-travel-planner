@@ -36,6 +36,8 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 # standalone output so its complete dependency set takes precedence.
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules ./node_modules
 COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
+COPY --from=builder --chown=nextjs:nodejs /app/src ./src
+COPY --from=builder --chown=nextjs:nodejs /app/tsconfig.json ./tsconfig.json
 COPY --from=builder --chown=nextjs:nodejs /app/package.json ./package.json
 COPY --from=builder --chown=nextjs:nodejs /app/docker-entrypoint.sh ./docker-entrypoint.sh
 RUN chmod +x ./docker-entrypoint.sh
